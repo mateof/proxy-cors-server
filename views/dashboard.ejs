@@ -596,12 +596,19 @@
 
     // --- Selector de rango ---
 
+    function resetFeed() {
+      lastId = 0;
+      liveFeed.innerHTML = '';
+    }
+
     function setRange(range) {
       currentRange = range;
       localStorage.setItem('dashboardRange', range);
       document.querySelectorAll('.range-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.range === range);
       });
+
+      resetFeed();
 
       const customEl = document.getElementById('customRange');
       if (range === 'custom') {
@@ -617,7 +624,6 @@
         document.getElementById('customTo').value = customTo;
         document.getElementById('statRangeLabel').textContent = 'personalizado';
         document.getElementById('chartTitle').textContent = 'Peticiones — personalizado';
-        // No hacer poll automático, esperar a "Aplicar"
         if (customFrom && customTo) poll();
         return;
       }
@@ -634,6 +640,7 @@
       if (!customFrom || !customTo) return;
       localStorage.setItem('customFrom', customFrom);
       localStorage.setItem('customTo', customTo);
+      resetFeed();
       poll();
     }
 

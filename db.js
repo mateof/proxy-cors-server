@@ -172,7 +172,10 @@ module.exports = {
     return stmts.getStats.get()
   },
 
-  getRecentRequests(limit = 50) {
+  getRecentRequests(limit = 50, timeFilter) {
+    if (timeFilter) {
+      return db.prepare(`SELECT * FROM requests WHERE ${timeFilter} ORDER BY id DESC LIMIT ?`).all(limit)
+    }
     return stmts.getRecentRequests.all(limit)
   },
 
@@ -200,7 +203,10 @@ module.exports = {
     return stmts.getLastRequestId.get().id || 0
   },
 
-  getRequestsAfterId(id) {
+  getRequestsAfterId(id, timeFilter) {
+    if (timeFilter) {
+      return db.prepare(`SELECT * FROM requests WHERE id > ? AND ${timeFilter} ORDER BY id DESC LIMIT 50`).all(id)
+    }
     return stmts.getRequestsAfterId.all(id)
   },
 
