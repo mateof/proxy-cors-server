@@ -1,0 +1,20 @@
+{
+  "name": "proxy-cors-cima",
+  "version": "1.0.0",
+  "description": "Proxy CORS para CIMA (AEMPS) con rate-limiting y logging SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "cookie-session": "^2.1.0",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "redis": "^4.7.0"
+  }
+}

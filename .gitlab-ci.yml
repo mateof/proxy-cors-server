@@ -1,0 +1,21 @@
+stages:
+  - build
+
+build:
+  image: docker:24.0.5
+  stage: build
+  services:
+    - name: docker:24.0.5-dind
+
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+
+  script:
+    - docker build -t proxy-cors:$CI_COMMIT_SHORT_SHA .
+
+    - echo "$GHCR_TOKEN" | docker login ghcr.io -u mateof --password-stdin
+    - docker tag proxy-cors:$CI_COMMIT_SHORT_SHA ghcr.io/mateof/proxy-cors:$CI_COMMIT_SHORT_SHA
+    - docker tag proxy-cors:$CI_COMMIT_SHORT_SHA ghcr.io/mateof/proxy-cors:latest
+    - docker push ghcr.io/mateof/proxy-cors:$CI_COMMIT_SHORT_SHA
+    - docker push ghcr.io/mateof/proxy-cors:latest

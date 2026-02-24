@@ -1,0 +1,6 @@
+node_modules/
+data/
+.claude/
+*.db
+*.db-wal
+*.db-shm

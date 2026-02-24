@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Proxy CORS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+
+    /* Header */
+    .header {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 { font-size: 1.1rem; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: inline-block;
+    }
+    .status-dot.offline { background: #ef4444; }
+    .btn {
+      padding: 6px 14px;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background: #334155; color: #e2e8f0; }
+    .btn-danger { border-color: #7f1d1d; color: #fca5a5; }
+    .btn-danger:hover { background: #7f1d1d; }
+
+    /* Time range selector */
+    .range-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 24px;
+      background: #0f172a;
+    }
+    .range-bar span { font-size: 0.8rem; color: #64748b; margin-right: 4px; }
+    .range-btn {
+      padding: 5px 14px;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .range-btn:hover { background: #334155; color: #e2e8f0; }
+    .range-btn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+
+    /* Custom range pickers */
+    .custom-range {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 0 24px 12px;
+      flex-wrap: wrap;
+    }
+    .custom-range.visible { display: flex; }
+    .custom-range label { font-size: 0.8rem; color: #64748b; }
+    .custom-range input[type="datetime-local"] {
+      padding: 5px 10px;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 0.8rem;
+      font-family: inherit;
+    }
+    .custom-range input[type="datetime-local"]:focus { outline: none; border-color: #3b82f6; }
+    .custom-range .btn-apply {
+      padding: 5px 14px;
+      border: 1px solid #3b82f6;
+      border-radius: 6px;
+      background: #3b82f6;
+      color: #fff;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .custom-range .btn-apply:hover { background: #2563eb; }
+
+    /* Poll interval selector */
+    .poll-select {
+      padding: 3px 8px;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      background: #0f172a;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-family: inherit;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+    .poll-select:focus { outline: none; border-color: #3b82f6; }
+
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+    /* Cards resumen */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #1e293b;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #334155;
+    }
+    .stat-label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 2rem; font-weight: 700; margin-top: 4px; }
+    .stat-value.green { color: #22c55e; }
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.yellow { color: #eab308; }
+    .stat-value.red { color: #ef4444; }
+    .stat-sub { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+    /* Grid dos columnas */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    /* Paneles */
+    .panel {
+      background: #1e293b;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      overflow: hidden;
+    }
+    .panel-title {
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-body { padding: 14px 18px; }
+
+    /* Tabla */
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { text-align: left; color: #94a3b8; font-weight: 500; padding: 8px 10px; border-bottom: 1px solid #334155; }
+    td { padding: 8px 10px; border-bottom: 1px solid #1e293b; }
+    tr:hover td { background: #0f172a; }
+
+    /* Status badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success { background: #14532d; color: #86efac; }
+    .badge-error { background: #7f1d1d; color: #fca5a5; }
+    .badge-warn { background: #713f12; color: #fde047; }
+    .badge-cache { background: #065f46; color: #6ee7b7; }
+
+    /* Gráfico de barras */
+    .bar-chart { display: flex; align-items: flex-end; gap: 2px; height: 140px; padding: 10px 0; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+    .bar {
+      width: 100%;
+      max-width: 30px;
+      background: #3b82f6;
+      border-radius: 3px 3px 0 0;
+      min-height: 2px;
+      transition: height 0.3s;
+    }
+    .bar-label { font-size: 0.6rem; color: #64748b; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .bar-value { font-size: 0.6rem; color: #94a3b8; margin-bottom: 2px; }
+
+    /* Live feed */
+    .live-feed { max-height: 400px; overflow-y: auto; }
+    .feed-item {
+      padding: 8px 14px;
+      border-bottom: 1px solid #0f172a;
+      font-size: 0.8rem;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      animation: fadeIn 0.3s;
+    }
+    .feed-item:hover { background: #0f172a; }
+    .feed-time { color: #64748b; min-width: 60px; }
+    .feed-status { min-width: 80px; text-align: center; display: flex; gap: 4px; align-items: center; }
+    .feed-ip { color: #94a3b8; min-width: 120px; }
+    .feed-path { color: #e2e8f0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-ms { color: #64748b; min-width: 50px; text-align: right; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Blocked IPs */
+    .unblock-btn {
+      padding: 2px 8px;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .unblock-btn:hover { background: #334155; color: #e2e8f0; }
+
+    /* Settings form */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"] {
+      padding: 8px 12px;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    .form-group input:focus { outline: none; border-color: #3b82f6; }
+    .form-group input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .form-group .source-tag { font-size: 0.7rem; color: #64748b; font-style: italic; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #1e293b;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 0.85rem; }
+    .toggle { position: relative; width: 40px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #334155; border-radius: 22px; cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+      background: #e2e8f0; border-radius: 50%; transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: #3b82f6; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .toggle input:disabled + .toggle-slider { opacity: 0.5; cursor: not-allowed; }
+    .settings-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-primary {
+      padding: 8px 18px; border: none; border-radius: 6px;
+      background: #3b82f6; color: #fff; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .settings-msg { font-size: 0.8rem; margin-top: 10px; padding: 8px 12px; border-radius: 6px; display: none; }
+    .settings-msg.success { display: block; background: #14532d; color: #86efac; }
+    .settings-msg.error { display: block; background: #7f1d1d; color: #fca5a5; }
+
+    .no-data { color: #64748b; padding: 12px 0; text-align: center; font-size: 0.85rem; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .two-col { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Proxy CORS</h1>
+    <div class="header-right">
+      <span><span class="status-dot" id="redisDot" style="background: <%= data.cacheStatus ? '#22c55e' : '#ef4444' %>"></span> <span style="font-size:0.8rem;color:#94a3b8">Redis</span></span>
+      <span><span class="status-dot" id="statusDot"></span> <span id="statusText" style="font-size:0.8rem;color:#94a3b8">Conectado</span></span>
+      <a href="/dashboard/logout" class="btn">Cerrar sesión</a>
+    </div>
+  </div>
+
+  <!-- Selector de rango -->
+  <div class="range-bar">
+    <span>Periodo:</span>
+    <% ranges.forEach(r => { %>
+      <button class="range-btn<%= r === defaultRange ? ' active' : '' %>" data-range="<%= r %>" onclick="setRange('<%= r %>')"><%= r %></button>
+    <% }) %>
+    <button class="range-btn" data-range="custom" onclick="setRange('custom')">Custom</button>
+  </div>
+
+  <!-- Pickers de rango custom -->
+  <div class="custom-range" id="customRange">
+    <label>Desde:</label>
+    <input type="datetime-local" id="customFrom">
+    <label>Hasta:</label>
+    <input type="datetime-local" id="customTo">
+    <button class="btn-apply" onclick="applyCustomRange()">Aplicar</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Resumen -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Peticiones</div>
+        <div class="stat-value blue" id="statRequests"><%= data.requests %></div>
+        <div class="stat-sub" id="statRangeLabel">última hora</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tiempo medio respuesta</div>
+        <div class="stat-value yellow" id="statAvg"><%= data.avgResponseTime %> ms</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Errores</div>
+        <div class="stat-value red" id="statErrors"><%= data.errors %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cache hits</div>
+        <div class="stat-value green" id="statCacheHits"><%= data.cacheHits %></div>
+        <div class="stat-sub" id="statCacheHitPct"><%= data.cacheHits + data.cacheMisses > 0 ? Math.round(data.cacheHits / (data.cacheHits + data.cacheMisses) * 100) + '%' : '—' %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cache misses</div>
+        <div class="stat-value yellow" id="statCacheMisses"><%= data.cacheMisses %></div>
+        <div class="stat-sub" id="statCacheMissPct"><%= data.cacheHits + data.cacheMisses > 0 ? Math.round(data.cacheMisses / (data.cacheHits + data.cacheMisses) * 100) + '%' : '—' %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total histórico</div>
+        <div class="stat-value" id="statTotal"><%= data.total_requests %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">IPs únicas</div>
+        <div class="stat-value" id="statUniqueIps"><%= data.unique_ips %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">IPs bloqueadas</div>
+        <div class="stat-value red" id="statBlocked"><%= data.blocked_ips %></div>
+      </div>
+    </div>
+
+    <!-- Gráfico + Status breakdown -->
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-title" id="chartTitle">Peticiones</div>
+        <div class="panel-body">
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Códigos de estado</div>
+        <div class="panel-body">
+          <table>
+            <thead><tr><th>Status</th><th>Cantidad</th></tr></thead>
+            <tbody id="statusTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top IPs + Top paths -->
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-title">Top IPs</div>
+        <div class="panel-body">
+          <table>
+            <thead><tr><th>IP</th><th>Peticiones</th></tr></thead>
+            <tbody id="topIpsTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Top rutas</div>
+        <div class="panel-body">
+          <table>
+            <thead><tr><th>Ruta</th><th>Peticiones</th></tr></thead>
+            <tbody id="topPathsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Peticiones en tiempo real -->
+    <div class="panel" style="margin-bottom: 24px">
+      <div class="panel-title">
+        Peticiones en tiempo real
+        <span style="font-size:0.75rem;color:#64748b">Actualización cada
+          <select class="poll-select" id="pollSelect" onchange="setPollInterval(this.value)">
+            <option value="1000">1s</option>
+            <option value="3000" selected>3s</option>
+            <option value="5000">5s</option>
+            <option value="10000">10s</option>
+            <option value="30000">30s</option>
+            <option value="60000">60s</option>
+          </select>
+        </span>
+      </div>
+      <div class="live-feed" id="liveFeed">
+        <% data.recentRequests.forEach(r => { %>
+          <div class="feed-item">
+            <span class="feed-time"><%= r.timestamp.split(' ')[1] || r.timestamp %></span>
+            <span class="feed-status">
+              <span class="badge <%= r.status >= 200 && r.status < 300 ? 'badge-success' : r.status >= 400 ? 'badge-error' : 'badge-warn' %>"><%= r.status %></span>
+              <% if (r.cache_hit) { %><span class="badge badge-cache">CACHE</span><% } %>
+            </span>
+            <span class="feed-ip"><%= r.ip %></span>
+            <span class="feed-path" title="<%= r.path %>"><%= r.path %></span>
+            <span class="feed-ms"><%= r.response_time_ms %>ms</span>
+          </div>
+        <% }) %>
+        <% if (data.recentRequests.length === 0) { %>
+          <div class="feed-item" style="color:#64748b;justify-content:center">Esperando peticiones...</div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- IPs bloqueadas -->
+    <div class="panel" style="margin-bottom: 24px" id="blockedPanel">
+      <div class="panel-title">IPs bloqueadas</div>
+      <div class="panel-body">
+        <table>
+          <thead><tr><th>IP</th><th>Bloqueada</th><th>Motivo</th><th></th></tr></thead>
+          <tbody id="blockedTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Configuración Telegram -->
+    <div class="panel" style="margin-bottom: 24px" id="telegramPanel">
+      <div class="panel-title">Notificaciones Telegram</div>
+      <div class="panel-body">
+        <div id="telegramLoading" style="color:#64748b;font-size:0.85rem">Cargando configuración...</div>
+        <div id="telegramForm" style="display:none">
+          <div class="settings-grid" style="margin-bottom: 16px">
+            <div class="form-group">
+              <label>Bot Token</label>
+              <input type="text" id="cfg-TELEGRAM_BOT_TOKEN" placeholder="123456:ABC-DEF...">
+              <span class="source-tag" id="src-TELEGRAM_BOT_TOKEN"></span>
+            </div>
+            <div class="form-group">
+              <label>Chat ID</label>
+              <input type="text" id="cfg-TELEGRAM_CHAT_ID" placeholder="987654321">
+              <span class="source-tag" id="src-TELEGRAM_CHAT_ID"></span>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px">
+            <div class="toggle-row">
+              <span class="toggle-label">Notificar al bloquear IP</span>
+              <label class="toggle"><input type="checkbox" id="cfg-TELEGRAM_NOTIFY_ON_BLOCK"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Notificar al alcanzar límite global</span>
+              <label class="toggle"><input type="checkbox" id="cfg-TELEGRAM_NOTIFY_ON_GLOBAL_LIMIT"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Notificar intentos a dominios no permitidos</span>
+              <label class="toggle"><input type="checkbox" id="cfg-TELEGRAM_NOTIFY_ON_FORBIDDEN_DOMAIN"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="settings-grid" style="margin-bottom: 4px">
+            <div class="form-group">
+              <label>Umbral dominio prohibido (intentos)</label>
+              <input type="number" id="cfg-TELEGRAM_FORBIDDEN_DOMAIN_THRESHOLD" min="1">
+              <span class="source-tag" id="src-TELEGRAM_FORBIDDEN_DOMAIN_THRESHOLD"></span>
+            </div>
+            <div class="form-group">
+              <label>Cooldown entre alertas (ms)</label>
+              <input type="number" id="cfg-TELEGRAM_COOLDOWN_MS" min="1000" step="1000">
+              <span class="source-tag" id="src-TELEGRAM_COOLDOWN_MS"></span>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn-primary" id="btnSaveSettings" onclick="saveSettings()">Guardar</button>
+            <button class="btn" id="btnTestTelegram" onclick="testTelegram()">Enviar mensaje de prueba</button>
+          </div>
+          <div class="settings-msg" id="settingsMsg"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let lastId = <%= data.lastRequestId || 0 %>;
+    let currentRange = localStorage.getItem('dashboardRange') || '<%= defaultRange %>';
+    let customFrom = localStorage.getItem('customFrom') || '';
+    let customTo = localStorage.getItem('customTo') || '';
+    let pollInterval = parseInt(localStorage.getItem('pollInterval')) || 3000;
+    let pollTimer = null;
+    const liveFeed = document.getElementById('liveFeed');
+    const MAX_FEED_ITEMS = 100;
+
+    const RANGE_LABELS = { '1h': 'última hora', '6h': 'últimas 6h', '24h': 'últimas 24h', '7d': 'últimos 7 días', '30d': 'últimos 30 días', 'custom': 'personalizado' };
+
+    // --- Utilidades ---
+
+    function badgeClass(status) {
+      if (status >= 200 && status < 300) return 'badge-success';
+      if (status >= 400) return 'badge-error';
+      return 'badge-warn';
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // --- Selector de rango ---
+
+    function setRange(range) {
+      currentRange = range;
+      localStorage.setItem('dashboardRange', range);
+      document.querySelectorAll('.range-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.range === range);
+      });
+
+      const customEl = document.getElementById('customRange');
+      if (range === 'custom') {
+        customEl.classList.add('visible');
+        // Inicializar pickers si están vacíos
+        if (!customFrom) {
+          const now = new Date();
+          const from = new Date(now.getTime() - 60 * 60 * 1000);
+          customFrom = from.toISOString().slice(0, 16);
+          customTo = now.toISOString().slice(0, 16);
+        }
+        document.getElementById('customFrom').value = customFrom;
+        document.getElementById('customTo').value = customTo;
+        document.getElementById('statRangeLabel').textContent = 'personalizado';
+        document.getElementById('chartTitle').textContent = 'Peticiones — personalizado';
+        // No hacer poll automático, esperar a "Aplicar"
+        if (customFrom && customTo) poll();
+        return;
+      }
+
+      customEl.classList.remove('visible');
+      document.getElementById('statRangeLabel').textContent = RANGE_LABELS[range] || range;
+      document.getElementById('chartTitle').textContent = 'Peticiones — ' + (RANGE_LABELS[range] || range);
+      poll();
+    }
+
+    function applyCustomRange() {
+      customFrom = document.getElementById('customFrom').value;
+      customTo = document.getElementById('customTo').value;
+      if (!customFrom || !customTo) return;
+      localStorage.setItem('customFrom', customFrom);
+      localStorage.setItem('customTo', customTo);
+      poll();
+    }
+
+    function setPollInterval(ms) {
+      pollInterval = parseInt(ms);
+      localStorage.setItem('pollInterval', pollInterval);
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(poll, pollInterval);
+    }
+
+    // --- Renderizar gráfico ---
+
+    function renderChart(data) {
+      const chart = document.getElementById('barChart');
+      if (!data || data.length === 0) {
+        chart.innerHTML = '<div class="no-data">Sin datos</div>';
+        return;
+      }
+      const maxCount = Math.max(...data.map(d => d.count), 1);
+      chart.innerHTML = data.map(d => {
+        const height = Math.max((d.count / maxCount) * 100, 2);
+        return `<div class="bar-col">
+          <span class="bar-value">${d.count > 0 ? d.count : ''}</span>
+          <div class="bar" style="height:${height}%"></div>
+          <span class="bar-label" title="${d.label}">${d.label}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // --- Renderizar tablas ---
+
+    function renderStatusTable(data) {
+      const tbody = document.getElementById('statusTable');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="no-data">Sin datos</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(s =>
+        `<tr><td><span class="badge ${badgeClass(s.status)}">${s.status}</span></td><td>${s.count}</td></tr>`
+      ).join('');
+    }
+
+    function renderTopIps(data) {
+      const tbody = document.getElementById('topIpsTable');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="no-data">Sin datos</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(r => `<tr><td>${escapeHtml(r.ip)}</td><td>${r.count}</td></tr>`).join('');
+    }
+
+    function renderTopPaths(data) {
+      const tbody = document.getElementById('topPathsTable');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="no-data">Sin datos</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(r =>
+        `<tr><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(r.path)}">${escapeHtml(r.path)}</td><td>${r.count}</td></tr>`
+      ).join('');
+    }
+
+    function renderBlockedIps(data) {
+      const panel = document.getElementById('blockedPanel');
+      const tbody = document.getElementById('blockedTable');
+      if (!data || data.length === 0) {
+        panel.style.display = 'none';
+        return;
+      }
+      panel.style.display = '';
+      tbody.innerHTML = data.map(b =>
+        `<tr id="block-${b.ip.replace(/[.:]/g, '-')}">
+          <td>${escapeHtml(b.ip)}</td>
+          <td>${b.blocked_at}</td>
+          <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis">${escapeHtml(b.reason || '')}</td>
+          <td><button class="unblock-btn" onclick="unblockIp('${escapeHtml(b.ip)}')">Desbloquear</button></td>
+        </tr>`
+      ).join('');
+    }
+
+    // --- Actualizar todo el dashboard ---
+
+    function updateDashboard(stats) {
+      document.getElementById('statRequests').textContent = stats.requests;
+      document.getElementById('statAvg').textContent = stats.avgResponseTime + ' ms';
+      document.getElementById('statErrors').textContent = stats.errors;
+      document.getElementById('statTotal').textContent = stats.total_requests;
+      document.getElementById('statUniqueIps').textContent = stats.unique_ips;
+      document.getElementById('statBlocked').textContent = stats.blocked_ips;
+
+      // Cache stats
+      document.getElementById('statCacheHits').textContent = stats.cacheHits;
+      document.getElementById('statCacheMisses').textContent = stats.cacheMisses;
+      const cacheTotal = stats.cacheHits + stats.cacheMisses;
+      document.getElementById('statCacheHitPct').textContent = cacheTotal > 0 ? Math.round(stats.cacheHits / cacheTotal * 100) + '%' : '—';
+      document.getElementById('statCacheMissPct').textContent = cacheTotal > 0 ? Math.round(stats.cacheMisses / cacheTotal * 100) + '%' : '—';
+
+      renderChart(stats.byInterval);
+      renderStatusTable(stats.statusBreakdown);
+      renderTopIps(stats.topIps);
+      renderTopPaths(stats.topPaths);
+      renderBlockedIps(stats.blockedIps);
+    }
+
+    // --- Live feed ---
+
+    function addFeedItem(r) {
+      const time = r.timestamp.split(' ')[1] || r.timestamp;
+      const cacheBadge = r.cache_hit ? ' <span class="badge badge-cache">CACHE</span>' : '';
+      const div = document.createElement('div');
+      div.className = 'feed-item';
+      div.innerHTML = `
+        <span class="feed-time">${time}</span>
+        <span class="feed-status"><span class="badge ${badgeClass(r.status)}">${r.status}</span>${cacheBadge}</span>
+        <span class="feed-ip">${escapeHtml(r.ip)}</span>
+        <span class="feed-path" title="${escapeHtml(r.path)}">${escapeHtml(r.path)}</span>
+        <span class="feed-ms">${r.response_time_ms}ms</span>
+      `;
+      const waiting = liveFeed.querySelector('.feed-item[style]');
+      if (waiting && waiting.textContent.includes('Esperando')) waiting.remove();
+      liveFeed.prepend(div);
+      while (liveFeed.children.length > MAX_FEED_ITEMS) {
+        liveFeed.removeChild(liveFeed.lastChild);
+      }
+    }
+
+    // --- Polling ---
+
+    async function poll() {
+      try {
+        let url = `/dashboard/api/poll?after=${lastId}&range=${currentRange}`;
+        if (currentRange === 'custom' && customFrom && customTo) {
+          url += `&from=${encodeURIComponent(customFrom)}&to=${encodeURIComponent(customTo)}`;
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+
+        updateDashboard(data.stats);
+
+        if (data.newRequests.length > 0) {
+          data.newRequests.reverse().forEach(r => addFeedItem(r));
+          lastId = data.newRequests[data.newRequests.length - 1].id;
+        }
+
+        // Redis status
+        document.getElementById('redisDot').style.background = data.cacheStatus ? '#22c55e' : '#ef4444';
+
+        document.getElementById('statusDot').className = 'status-dot';
+        document.getElementById('statusText').textContent = 'Conectado';
+      } catch {
+        document.getElementById('statusDot').className = 'status-dot offline';
+        document.getElementById('statusText').textContent = 'Sin conexión';
+      }
+    }
+
+    async function unblockIp(ip) {
+      if (!confirm(`¿Desbloquear la IP ${ip}?`)) return;
+      try {
+        await fetch(`/dashboard/api/unblock/${encodeURIComponent(ip)}`, { method: 'POST' });
+        const row = document.getElementById('block-' + ip.replace(/[.:]/g, '-'));
+        if (row) row.remove();
+      } catch {
+        alert('Error al desbloquear');
+      }
+    }
+
+    // --- Inicialización ---
+
+    // Inicializar selector de intervalo de polling
+    const pollSelect = document.getElementById('pollSelect');
+    pollSelect.value = String(pollInterval);
+
+    // Aplicar rango guardado
+    setRange(currentRange);
+
+    // Iniciar polling con intervalo configurable
+    pollTimer = setInterval(poll, pollInterval);
+
+    // --- Telegram settings ---
+    const TELEGRAM_KEYS = [
+      'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID',
+      'TELEGRAM_NOTIFY_ON_BLOCK', 'TELEGRAM_NOTIFY_ON_GLOBAL_LIMIT', 'TELEGRAM_NOTIFY_ON_FORBIDDEN_DOMAIN',
+      'TELEGRAM_FORBIDDEN_DOMAIN_THRESHOLD', 'TELEGRAM_COOLDOWN_MS',
+    ];
+    const BOOLEAN_KEYS = ['TELEGRAM_NOTIFY_ON_BLOCK', 'TELEGRAM_NOTIFY_ON_GLOBAL_LIMIT', 'TELEGRAM_NOTIFY_ON_FORBIDDEN_DOMAIN'];
+
+    async function loadSettings() {
+      try {
+        const res = await fetch('/dashboard/api/settings');
+        const cfg = await res.json();
+        for (const key of TELEGRAM_KEYS) {
+          const el = document.getElementById('cfg-' + key);
+          if (!el || !cfg[key]) continue;
+          const { value, source } = cfg[key];
+          const isEnv = source === 'env';
+          if (BOOLEAN_KEYS.includes(key)) {
+            el.checked = value === 'true';
+            el.disabled = isEnv;
+          } else {
+            el.value = value;
+            el.disabled = isEnv;
+          }
+          const srcEl = document.getElementById('src-' + key);
+          if (srcEl) {
+            if (isEnv) srcEl.textContent = 'Configurado por variable de entorno';
+            else if (source === 'db') srcEl.textContent = 'Guardado en base de datos';
+            else srcEl.textContent = '';
+          }
+        }
+        document.getElementById('telegramLoading').style.display = 'none';
+        document.getElementById('telegramForm').style.display = 'block';
+      } catch {
+        document.getElementById('telegramLoading').textContent = 'Error al cargar configuración';
+      }
+    }
+
+    function showSettingsMsg(text, type) {
+      const el = document.getElementById('settingsMsg');
+      el.textContent = text;
+      el.className = 'settings-msg ' + type;
+      setTimeout(() => { el.className = 'settings-msg'; }, 4000);
+    }
+
+    async function saveSettings() {
+      const btn = document.getElementById('btnSaveSettings');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+      try {
+        for (const key of TELEGRAM_KEYS) {
+          const el = document.getElementById('cfg-' + key);
+          if (!el || el.disabled) continue;
+          const value = BOOLEAN_KEYS.includes(key) ? (el.checked ? 'true' : 'false') : el.value;
+          await fetch('/dashboard/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, value }),
+          });
+        }
+        showSettingsMsg('Configuración guardada correctamente', 'success');
+        loadSettings();
+      } catch {
+        showSettingsMsg('Error al guardar', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    }
+
+    async function testTelegram() {
+      const btn = document.getElementById('btnTestTelegram');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      try {
+        const res = await fetch('/dashboard/api/telegram/test', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) showSettingsMsg('Mensaje de prueba enviado correctamente', 'success');
+        else showSettingsMsg('Error: ' + (data.error || 'desconocido'), 'error');
+      } catch {
+        showSettingsMsg('Error al enviar mensaje de prueba', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar mensaje de prueba';
+      }
+    }
+
+    loadSettings();
+  </script>
+</body>
+</html>

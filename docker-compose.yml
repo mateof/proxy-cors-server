@@ -1,0 +1,36 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: proxy-cors-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  proxy-cors:
+    build: .
+    container_name: proxy-cors-cima
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    volumes:
+      - proxy-data:/app/data
+    depends_on:
+      - redis
+    environment:
+      - PORT=3010
+      - ALLOWED_ORIGINS=https://mateof.github.io,http://localhost:5173
+      - RATE_LIMIT_PER_IP=100
+      - RATE_LIMIT_GLOBAL=1000
+      - RATE_LIMIT_WINDOW_MS=900000
+      - DASHBOARD_USER=admin
+      - DASHBOARD_PASS=cambiar-esta-password
+      - SESSION_SECRET=cambiar-este-secreto
+      - REDIS_URL=redis://redis:6379
+      - REDIS_TTL=5m
+
+volumes:
+  proxy-data:
+  redis-data:
