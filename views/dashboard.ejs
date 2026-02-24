@@ -292,6 +292,43 @@
 
     .no-data { color: #64748b; padding: 12px 0; text-align: center; font-size: 0.85rem; }
 
+    /* Proxy URL bar */
+    .proxy-url-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      font-size: 0.8rem;
+    }
+    .proxy-url-bar span.label { color: #64748b; white-space: nowrap; }
+    .proxy-url-bar code {
+      background: #0f172a;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .copy-btn {
+      padding: 5px 10px;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { background: #334155; color: #e2e8f0; }
+    .copy-btn.copied { background: #14532d; border-color: #14532d; color: #86efac; }
+
     /* Responsive */
     @media (max-width: 768px) {
       .two-col { grid-template-columns: 1fr; }
@@ -308,6 +345,13 @@
       <span><span class="status-dot" id="statusDot"></span> <span id="statusText" style="font-size:0.8rem;color:#94a3b8">Conectado</span></span>
       <a href="/dashboard/logout" class="btn">Cerrar sesión</a>
     </div>
+  </div>
+
+  <!-- URL del proxy -->
+  <div class="proxy-url-bar">
+    <span class="label">Endpoint:</span>
+    <code id="proxyUrl"></code>
+    <button class="copy-btn" onclick="copyProxyUrl(this)">Copiar</button>
   </div>
 
   <!-- Selector de rango -->
@@ -515,6 +559,18 @@
   </div>
 
   <script>
+    // Proxy URL
+    document.getElementById('proxyUrl').textContent = location.origin + '/proxy?url={url}';
+
+    function copyProxyUrl(btn) {
+      const url = location.origin + '/proxy?url=';
+      navigator.clipboard.writeText(url).then(() => {
+        btn.textContent = 'Copiado';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
     let lastId = <%= data.lastRequestId || 0 %>;
     let currentRange = localStorage.getItem('dashboardRange') || '<%= defaultRange %>';
     let customFrom = localStorage.getItem('customFrom') || '';

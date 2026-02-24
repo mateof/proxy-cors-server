@@ -7,11 +7,11 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes # redis-server --save "" --appendonly no # disable persistence, but we want it for rate limiting
 
   proxy-cors:
-    build: .
-    container_name: proxy-cors-cima
+    image: ghcr.io/mateof/proxy-cors:latest
+    container_name: proxy-cors-server
     restart: unless-stopped
     ports:
       - "3010:3010"
