@@ -26,6 +26,26 @@ Permite que aplicaciones frontend (como GitHub Pages) accedan a APIs externas qu
 - morgan (logging en consola)
 - Redis 7+ (caché de respuestas)
 
+## Estructura del proyecto
+
+```
+proxyCors/
+├── src/
+│   ├── server.js       # Servidor Express principal
+│   ├── config.js       # Configuración centralizada
+│   ├── db.js           # SQLite: tablas, queries y funciones
+│   ├── cache.js        # Caché Redis con degradación elegante
+│   ├── telegram.js     # Notificaciones Telegram
+│   └── views/
+│       ├── login.ejs   # Pantalla de login del dashboard
+│       └── dashboard.ejs # Panel de monitorización
+├── data/               # Base de datos SQLite (se crea automáticamente)
+├── package.json
+├── Dockerfile
+├── docker-compose.yml
+└── .dockerignore
+```
+
 ## Instalación
 
 ### Directo con Node.js
