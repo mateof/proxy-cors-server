@@ -11,4 +11,4 @@ RUN mkdir -p /app/data
 
 EXPOSE 3010
 
-CMD ["node", "server.js"]
+CMD ["node", "src/server.js"]

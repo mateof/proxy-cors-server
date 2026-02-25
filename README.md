@@ -30,14 +30,15 @@ Permite que aplicaciones frontend (como GitHub Pages) accedan a APIs externas qu
 
 ```
 proxyCors/
-├── server.js           # Servidor Express principal
-├── config.js           # Configuración centralizada
-├── db.js               # SQLite: tablas, queries y funciones
-├── cache.js            # Caché Redis con degradación elegante
-├── telegram.js         # Notificaciones Telegram
-├── views/
-│   ├── login.ejs       # Pantalla de login del dashboard
-│   └── dashboard.ejs   # Panel de monitorización
+├── src/
+│   ├── server.js       # Servidor Express principal
+│   ├── config.js       # Configuración centralizada
+│   ├── db.js           # SQLite: tablas, queries y funciones
+│   ├── cache.js        # Caché Redis con degradación elegante
+│   ├── telegram.js     # Notificaciones Telegram
+│   └── views/
+│       ├── login.ejs   # Pantalla de login del dashboard
+│       └── dashboard.ejs # Panel de monitorización
 ├── data/               # Base de datos SQLite (se crea automáticamente)
 ├── package.json
 ├── Dockerfile
