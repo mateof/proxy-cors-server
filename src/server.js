@@ -270,7 +270,7 @@ app.get('/proxy', rateLimit, async (req, res) => {
   }
 
   const targetOrigin = parsed.origin
-  if (!config.TARGET_ALLOWLIST.some(allowed => targetOrigin === allowed)) {
+  if (!config.TARGET_ALLOWLIST.includes('*') && !config.TARGET_ALLOWLIST.some(allowed => targetOrigin === allowed)) {
     telegram.notifyForbiddenDomain(parsed.hostname, ip)
     res.status(403).json({ error: `Dominio no permitido: ${parsed.hostname}. Dominios permitidos: ${config.TARGET_ALLOWLIST.join(', ')}` })
     return

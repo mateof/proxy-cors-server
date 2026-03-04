@@ -2,10 +2,10 @@ module.exports = {
   PORT: process.env.PORT || 3010,
 
   // Orígenes permitidos (separados por coma en la variable de entorno)
-  ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || 'https://mateof.github.io,http://localhost:5173').split(','),
+  ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || 'https://mateof.github.io,http://localhost:5173').split(',').map(s => s.trim()),
 
   // Dominios destino permitidos (separados por coma en la variable de entorno)
-  TARGET_ALLOWLIST: (process.env.TARGET_ALLOWLIST || 'https://cima.aemps.es').split(','),
+  TARGET_ALLOWLIST: (process.env.TARGET_ALLOWLIST || 'https://cima.aemps.es').split(',').map(s => s.trim()),
 
   // Rate limiting por IP (peticiones por ventana de tiempo)
   RATE_LIMIT_PER_IP: parseInt(process.env.RATE_LIMIT_PER_IP || '100'),

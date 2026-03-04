@@ -70,8 +70,8 @@ Todas las opciones se configuran mediante **variables de entorno** (o se editan 
 | Variable | Descripción | Valor por defecto |
 |---|---|---|
 | `PORT` | Puerto del servidor | `3010` |
-| `ALLOWED_ORIGINS` | Orígenes permitidos (separados por coma) | `https://mateof.github.io,http://localhost:5173` |
-| `TARGET_ALLOWLIST` | Dominios destino permitidos (separados por coma) | `https://cima.aemps.es` |
+| `ALLOWED_ORIGINS` | Orígenes permitidos (separados por coma, `*` para todos) | `https://mateof.github.io,http://localhost:5173` |
+| `TARGET_ALLOWLIST` | Dominios destino permitidos (separados por coma, `*` para todos) | `https://cima.aemps.es` |
 | `RATE_LIMIT_PER_IP` | Máximo de peticiones por IP por ventana | `100` |
 | `RATE_LIMIT_GLOBAL` | Máximo de peticiones totales por ventana | `1000` |
 | `RATE_LIMIT_WINDOW_MS` | Ventana de tiempo en ms | `900000` (15 min) |
