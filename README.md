@@ -1,5 +1,11 @@
 # Proxy CORS
 
+<p align="center">
+  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&amp;logoColor=white">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?logo=docker&amp;logoColor=white">
+  <a href="https://github.com/mateof/proxy-cors-server/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/mateof/proxy-cors-server"></a>
+</p>
+
 Proxy CORS genérico con rate-limiting, logging en SQLite y panel de monitorización.
 
 Permite que aplicaciones frontend (como GitHub Pages) accedan a APIs externas que no envían cabeceras CORS, proxeando las peticiones a través de un servidor intermedio con una whitelist de dominios destino.
